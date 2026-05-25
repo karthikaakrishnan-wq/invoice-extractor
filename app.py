@@ -232,14 +232,17 @@ def extract_field(text, field_name):
     
     if field_name == 'Invoice Number':
         patterns = [
-            r'quotation\s+no\.?\s*:?\s*(no\.\s*)?([a-z0-9#\-/]+)',
-            r'invoice\s+no\.?\s*:?\s*(no\.\s*)?([a-z0-9#\-/]+)',
-            r'bill\s+no\.?\s*:?\s*(no\.\s*)?([a-z0-9#\-/]+)',
+            r'quotation\s+no\.?\s*:?\s*([a-z0-9#\-/]+)',
+            r'invoice\s+no\.?\s*:?\s*([a-z0-9#\-/]+)',
+            r'bill\s+no\.?\s*:?\s*([a-z0-9#\-/]+)',
+            r'inv\s*#?\s*:?\s*([a-z0-9#\-/]+)',
+            r'#\s*([a-z]{2,}\d+)',
+            r'([a-z]{3,}\s*#\s*[a-z]?\d+)',
         ]
         for pattern in patterns:
             match = re.search(pattern, text_lower)
             if match:
-                value = match.group(2) if match.lastindex >= 2 else match.group(1)
+                value = match.group(1)
                 if value and len(value) > 2:
                     return value.upper()
     
@@ -272,17 +275,17 @@ def extract_field(text, field_name):
     
     elif field_name == 'Total Amount':
         patterns = [
-            r'total\s*(?:\n|:)?\s*(?:₹|rs\.?|inr|2)?\s*(\d+[,\d]+)',
-            r'(?:₹|rs\.?|2)\s*(\d+[,\d]+)',
-            r'grand\s+total\s*:?\s*(?:₹|rs\.?|inr|2)?\s*(\d+[,\d]+)',
+            r'total\s*(?:amount)?\s*:?\s*(?:rs\.?|₹|inr)?\s*(\d[\d,]+\.?\d*)',
+            r'grand\s+total\s*:?\s*(?:rs\.?|₹|inr)?\s*(\d[\d,]+\.?\d*)',
+            r'net\s+total\s*:?\s*(?:rs\.?|₹|inr)?\s*(\d[\d,]+\.?\d*)',
+            r'amount\s+payable\s*:?\s*(?:rs\.?|₹|inr)?\s*(\d[\d,]+\.?\d*)',
         ]
         for pattern in patterns:
             match = re.search(pattern, text_lower)
             if match:
-                amount = match.group(1)
-                amount = re.sub(r'^[₹2]\s*', '', amount)
-                if len(amount) >= 3 and amount[0].isdigit():
-                    return '₹ ' + amount
+                amount = match.group(1).replace(',', '')
+                if float(amount) > 100:  # Filter out small numbers
+                    return f"₹ {amount}"
     
     elif field_name == 'Tax Amount':
         patterns = [
@@ -471,9 +474,11 @@ with col1:
     
     col_x, col_y = st.columns(2)
     with col_x:
-        st.button("📂 Browse", use_container_width=True)
+        if st.button("📂 Browse", use_container_width=True):
+            st.info("💡 Web version: Files download to your Downloads folder automatically. Edit the filename above if needed.")
     with col_y:
-        st.button("📊 Open Excel", use_container_width=True)
+        if st.button("📊 Open Excel", use_container_width=True):
+            st.info("💡 Web version: Click 'Download Excel' in the results section below to get your file!")
     
     st.markdown('</div>', unsafe_allow_html=True)
 
