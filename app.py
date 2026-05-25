@@ -1,10 +1,9 @@
-
 """
 Invoice Data Extractor - Complete Version
 Modern UI + All Desktop Features
 No Settings Panel, All Working Features
 """
- 
+
 import streamlit as st
 import pandas as pd
 from PIL import Image
@@ -13,7 +12,7 @@ import re
 from datetime import datetime
 import io
 import os
- 
+
 # Page configuration
 st.set_page_config(
     page_title="Invoice Extractor - Brillspark",
@@ -21,7 +20,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
- 
+
 # Modern CSS
 st.markdown("""
     <style>
@@ -40,23 +39,20 @@ st.markdown("""
     }
     
     .hero-section {
-        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+        background: #5a67d8;
         backdrop-filter: blur(10px);
         border-radius: 30px;
         padding: 3rem 2rem;
         text-align: center;
         margin-bottom: 2rem;
-        border: 1px solid rgba(255, 255, 255, 0.18);
+        border: 1px solid rgba(255, 255, 255, 0.3);
         box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
     }
     
     .hero-title {
         font-size: 3.5rem;
         font-weight: 800;
-        background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        color: white;
         margin-bottom: 1rem;
         letter-spacing: -2px;
     }
@@ -79,18 +75,30 @@ st.markdown("""
     }
     
     .stButton > button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
+        background: white !important;
+        color: #667eea !important;
+        border: 2px solid #667eea !important;
         border-radius: 12px;
         padding: 0.75rem 2rem;
         font-weight: 600;
         font-size: 1rem;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
     }
     
     .stButton > button:hover {
+        background: #667eea !important;
+        color: white !important;
+        transform: translateY(-2px);
+    }
+    
+    /* Primary action buttons */
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        border: none !important;
+    }
+    
+    .stButton > button[kind="primary"]:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
     }
@@ -114,6 +122,30 @@ st.markdown("""
         color: white !important;
     }
     
+    /* Modern checkbox styling */
+    .stCheckbox > label {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
+        padding: 10px 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .stCheckbox > label:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+    }
+    
+    .stCheckbox input[type="checkbox"]:checked + label {
+        background: rgba(102, 126, 234, 0.15);
+        border-color: rgba(102, 126, 234, 0.5);
+    }
+    
     .section-divider {
         height: 2px;
         background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
@@ -130,18 +162,18 @@ st.markdown("""
     .badge {
         display: inline-block;
         padding: 0.5rem 1rem;
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.25);
         backdrop-filter: blur(10px);
         border-radius: 20px;
         font-size: 0.85rem;
         font-weight: 600;
         color: white;
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.4);
         margin: 0.25rem;
     }
     </style>
 """, unsafe_allow_html=True)
- 
+
 # Initialize session state
 if 'extracted_data' not in st.session_state:
     st.session_state.extracted_data = []
@@ -149,12 +181,12 @@ if 'activity_log' not in st.session_state:
     st.session_state.activity_log = []
 if 'excel_path' not in st.session_state:
     st.session_state.excel_path = "extracted_invoices.xlsx"
- 
+
 def log_activity(message):
     """Add message to activity log"""
     timestamp = datetime.now().strftime('[%H:%M:%S]')
     st.session_state.activity_log.append(f"{timestamp} {message}")
- 
+
 def extract_field(text, field_name):
     """Extract specific field from text - Optimized for Indian invoices"""
     text_lower = text.lower()
@@ -241,7 +273,7 @@ def extract_field(text, field_name):
                     return '₹ ' + amount
     
     return 'N/A'
- 
+
 def process_invoice(image_file, fields_to_extract):
     """Process invoice image and extract data"""
     try:
@@ -274,7 +306,7 @@ def process_invoice(image_file, fields_to_extract):
     except Exception as e:
         log_activity(f"❌ Error processing {image_file.name}: {str(e)}")
         return None
- 
+
 def convert_df_to_excel_bytes(df):
     """Convert dataframe to Excel bytes for download"""
     output = io.BytesIO()
@@ -282,13 +314,13 @@ def convert_df_to_excel_bytes(df):
         df.to_excel(writer, index=False, sheet_name='Invoice Data')
     output.seek(0)
     return output
- 
+
 # Hero Section
 st.markdown("""
     <div class="hero-section">
         <h1 class="hero-title">✨ Invoice Extractor AI</h1>
-        <p style="color: rgba(255, 255, 255, 0.9); font-size: 1.3rem; font-weight: 400; margin-bottom: 0.5rem;">Smart. Fast. Accurate.</p>
-        <p style="color: rgba(255, 255, 255, 0.7); font-size: 1rem;">
+        <p style="color: white; font-size: 1.3rem; font-weight: 400; margin-bottom: 0.5rem;">Smart. Fast. Accurate.</p>
+        <p style="color: rgba(255, 255, 255, 0.9); font-size: 1rem;">
             Extract data from invoices instantly with AI-powered OCR technology
         </p>
         <br>
@@ -297,32 +329,42 @@ st.markdown("""
         <span class="badge">⚡ Lightning Fast</span>
     </div>
 """, unsafe_allow_html=True)
- 
+
 st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
- 
+
 # Main Layout
 col1, col2 = st.columns([2, 1])
- 
+
 with col1:
     st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
     st.markdown("<h3 class='section-title'>📤 Upload & Process</h3>", unsafe_allow_html=True)
     
-    # Field selection
+    # Field selection - Modern Pill Style
     st.markdown("**Select Fields to Extract:**")
-    col_a, col_b, col_c = st.columns(3)
+    st.markdown("<div style='margin-bottom: 1rem;'></div>", unsafe_allow_html=True)
     
-    with col_a:
-        inv_num = st.checkbox('📋 Invoice Number', value=True)
-        date = st.checkbox('📅 Date', value=True)
-        company = st.checkbox('🏢 Company Name', value=True)
+    # Row 1
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        inv_num = st.checkbox('📋 Invoice Number', value=True, key='inv_num')
+    with col2:
+        customer = st.checkbox('👤 Customer Name', value=True, key='customer')
+    with col3:
+        tax = st.checkbox('📊 Tax Amount', value=False, key='tax')
     
-    with col_b:
-        customer = st.checkbox('👤 Customer Name', value=True)
-        total = st.checkbox('💰 Total Amount', value=True)
-        tax = st.checkbox('📊 Tax Amount', value=False)
+    # Row 2
+    col4, col5, col6 = st.columns(3)
+    with col4:
+        date = st.checkbox('📅 Date', value=True, key='date')
+    with col5:
+        total = st.checkbox('💰 Total Amount', value=True, key='total')
+    with col6:
+        subtotal = st.checkbox('💵 Subtotal', value=False, key='subtotal')
     
-    with col_c:
-        subtotal = st.checkbox('💵 Subtotal', value=False)
+    # Row 3
+    col7, col8, col9 = st.columns(3)
+    with col7:
+        company = st.checkbox('🏢 Company Name', value=True, key='company')
     
     field_options = {
         'Invoice Number': inv_num,
@@ -421,7 +463,30 @@ with col1:
                                 st.error("❌ Could not extract data")
     
     st.markdown("</div>", unsafe_allow_html=True)
- 
+    
+    # Excel Output Section
+    st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+    st.markdown("<h3 class='section-title'>💾 Excel Output File</h3>", unsafe_allow_html=True)
+    
+    excel_path = st.text_input(
+        "Excel file path:",
+        value=st.session_state.excel_path,
+        help="Path where Excel file will be saved"
+    )
+    st.session_state.excel_path = excel_path
+    
+    col_btn1, col_btn2 = st.columns(2)
+    
+    with col_btn1:
+        if st.button("📂 Browse", use_container_width=True):
+            st.info("💡 In web version, files download to your Downloads folder. Enter desired filename above.")
+    
+    with col_btn2:
+        if st.button("📊 Open Excel", use_container_width=True):
+            st.info("💡 Use the Download buttons in the results section below to get your Excel file!")
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+
 with col2:
     # Activity Log
     st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
@@ -443,7 +508,7 @@ with col2:
         st.info("📝 Activity will appear here...")
     
     st.markdown("</div>", unsafe_allow_html=True)
- 
+
 # Results Section
 if st.session_state.extracted_data:
     st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
@@ -483,13 +548,12 @@ if st.session_state.extracted_data:
             st.rerun()
     
     st.markdown("</div>", unsafe_allow_html=True)
- 
+
 # Footer
 st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
 st.markdown("""
     <div style='text-align: center; padding: 2rem; color: rgba(255,255,255,0.7);'>
-        <p style='font-size: 0.9rem;'>✨ Invoice Extractor | Brillspark</p>
-        <p style='font-size: 0.8rem;'> Optimized for Indian Invoices </p>
+        <p style='font-size: 0.9rem;'>✨ Invoice Extractor AI v2.0 | Brillspark</p>
+        <p style='font-size: 0.8rem;'>Powered by AI • Optimized for Indian Invoices • Built with ❤️</p>
     </div>
 """, unsafe_allow_html=True)
- 
