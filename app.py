@@ -1,7 +1,6 @@
 """
-Invoice Data Extractor - Complete Version
-Modern UI + All Desktop Features
-No Settings Panel, All Working Features
+Invoice Data Extractor - Clean Professional Design
+Brillspark - v2.0
 """
 
 import streamlit as st
@@ -11,7 +10,6 @@ import pytesseract
 import re
 from datetime import datetime
 import io
-import os
 
 # Page configuration
 st.set_page_config(
@@ -21,10 +19,10 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Modern CSS
+# Clean Modern CSS
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     
     * {
         font-family: 'Inter', sans-serif;
@@ -32,144 +30,184 @@ st.markdown("""
     
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
+    header {visibility: hidden;}
     
     .stApp {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        background-attachment: fixed;
+        background: #f8f9fa;
     }
     
-    .hero-section {
-        background: #5a67d8;
-        backdrop-filter: blur(10px);
-        border-radius: 30px;
+    /* Hero Section - Clean White Card */
+    .hero-card {
+        background: white;
+        border-radius: 16px;
         padding: 3rem 2rem;
         text-align: center;
         margin-bottom: 2rem;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
     
     .hero-title {
-        font-size: 3.5rem;
-        font-weight: 800;
-        color: white;
-        margin-bottom: 1rem;
-        letter-spacing: -2px;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 0.5rem;
     }
     
-    .glass-card {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        padding: 2rem;
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-        margin-bottom: 2rem;
-    }
-    
-    .section-title {
-        color: white;
-        font-size: 1.5rem;
+    .hero-subtitle {
+        font-size: 1.1rem;
+        color: #667eea;
         font-weight: 600;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
     }
     
-    .stButton > button {
-        background: white !important;
-        color: #667eea !important;
-        border: 2px solid #667eea !important;
+    .hero-description {
+        font-size: 0.95rem;
+        color: #6b7280;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Clean Card Style */
+    .clean-card {
+        background: white;
         border-radius: 12px;
-        padding: 0.75rem 2rem;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 1.5rem;
+    }
+    
+    .card-title {
+        font-size: 1.1rem;
         font-weight: 600;
-        font-size: 1rem;
-        transition: all 0.3s ease;
+        color: #1a1a1a;
+        margin-bottom: 1rem;
+    }
+    
+    /* Buttons - Clean Style */
+    .stButton > button {
+        background: white;
+        color: #667eea;
+        border: 2px solid #667eea;
+        border-radius: 8px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.2s;
     }
     
     .stButton > button:hover {
-        background: #667eea !important;
-        color: white !important;
-        transform: translateY(-2px);
+        background: #667eea;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
     }
     
-    /* Primary action buttons */
     .stButton > button[kind="primary"] {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-        color: white !important;
-        border: none !important;
+        background: #667eea;
+        color: white;
+        border: none;
     }
     
     .stButton > button[kind="primary"]:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+        background: #5568d3;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
     
-    .success-banner {
-        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        color: white;
-        padding: 1.5rem;
-        border-radius: 15px;
-        text-align: center;
-        font-weight: 600;
-        box-shadow: 0 4px 20px rgba(56, 239, 125, 0.3);
-        margin: 1rem 0;
-    }
-    
-    h1, h2, h3, h4, h5, h6, p, label, .stMarkdown {
-        color: white !important;
-    }
-    
-    .stCheckbox {
-        color: white !important;
-    }
-    
-    /* Modern checkbox styling */
+    /* Field Selection - Modern Pills */
     .stCheckbox > label {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 10px;
-        padding: 10px 14px;
+        background: #f3f4f6;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
         cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+        font-weight: 500;
     }
     
     .stCheckbox > label:hover {
-        background: rgba(255, 255, 255, 0.1);
-        border-color: rgba(255, 255, 255, 0.3);
-        transform: translateY(-1px);
+        background: #e5e7eb;
+        border-color: #d1d5db;
     }
     
-    .stCheckbox input[type="checkbox"]:checked + label {
-        background: rgba(102, 126, 234, 0.15);
-        border-color: rgba(102, 126, 234, 0.5);
+    .stCheckbox input[type="checkbox"]:checked + div {
+        background: #ede9fe;
+        border-color: #667eea;
+        color: #667eea;
     }
     
-    .section-divider {
-        height: 2px;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-        margin: 2rem 0;
-    }
-    
+    /* Text Input */
     .stTextInput > div > div > input {
-        background: rgba(255, 255, 255, 0.1);
-        color: white;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 10px;
+        border-radius: 8px;
+        border: 2px solid #e5e7eb;
+        padding: 0.75rem;
+        font-size: 0.9rem;
     }
     
-    .badge {
-        display: inline-block;
+    .stTextInput > div > div > input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    /* File Uploader */
+    .stFileUploader {
+        background: #f9fafb;
+        border: 2px dashed #d1d5db;
+        border-radius: 8px;
+        padding: 2rem;
+    }
+    
+    /* Tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background: #f3f4f6;
+        padding: 0.5rem;
+        border-radius: 8px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 6px;
         padding: 0.5rem 1rem;
-        background: rgba(255, 255, 255, 0.25);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
+        font-weight: 500;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: white;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    /* Success Message */
+    .stSuccess {
+        background: #d1fae5;
+        border: none;
+        border-radius: 8px;
+        color: #065f46;
+        font-weight: 500;
+    }
+    
+    /* Activity Log */
+    .activity-log {
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 1rem;
+        font-family: 'Monaco', monospace;
         font-size: 0.85rem;
-        font-weight: 600;
-        color: white;
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        margin: 0.25rem;
+        line-height: 1.6;
+        color: #4b5563;
+        height: 400px;
+        overflow-y: auto;
+    }
+    
+    /* Data Table */
+    .stDataFrame {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    /* Hide Streamlit elements */
+    .stDeployButton {display: none;}
+    
+    h1, h2, h3 {
+        color: #1a1a1a;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -188,7 +226,7 @@ def log_activity(message):
     st.session_state.activity_log.append(f"{timestamp} {message}")
 
 def extract_field(text, field_name):
-    """Extract specific field from text - Optimized for Indian invoices"""
+    """Extract specific field from text"""
     text_lower = text.lower()
     lines = [line.strip() for line in text.split('\n') if line.strip()]
     
@@ -304,11 +342,11 @@ def process_invoice(image_file, fields_to_extract):
         return extracted
     
     except Exception as e:
-        log_activity(f"❌ Error processing {image_file.name}: {str(e)}")
+        log_activity(f"❌ Error: {str(e)}")
         return None
 
 def convert_df_to_excel_bytes(df):
-    """Convert dataframe to Excel bytes for download"""
+    """Convert dataframe to Excel bytes"""
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Invoice Data')
@@ -317,54 +355,36 @@ def convert_df_to_excel_bytes(df):
 
 # Hero Section
 st.markdown("""
-    <div class="hero-section">
+    <div class="hero-card">
         <h1 class="hero-title">✨ Invoice Extractor AI</h1>
-        <p style="color: white; font-size: 1.3rem; font-weight: 400; margin-bottom: 0.5rem;">Smart. Fast. Accurate.</p>
-        <p style="color: rgba(255, 255, 255, 0.9); font-size: 1rem;">
-            Extract data from invoices instantly with AI-powered OCR technology
-        </p>
-        <br>
-        <span class="badge">🚀 Powered by AI</span>
-        <span class="badge">🇮🇳 Indian Format Support</span>
-        <span class="badge">⚡ Lightning Fast</span>
+        <p class="hero-subtitle">Smart. Fast. Accurate.</p>
+        <p class="hero-description">Extract data from invoices instantly with AI-powered OCR technology</p>
     </div>
 """, unsafe_allow_html=True)
 
-st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
-
 # Main Layout
-col1, col2 = st.columns([2, 1])
+col1, col2 = st.columns([2, 1], gap="large")
 
 with col1:
-    st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-    st.markdown("<h3 class='section-title'>📤 Upload & Process</h3>", unsafe_allow_html=True)
+    # Upload & Process Section
+    st.markdown('<div class="clean-card">', unsafe_allow_html=True)
+    st.markdown('<p class="card-title">📤 Upload & Process</p>', unsafe_allow_html=True)
     
-    # Field selection - Modern Pill Style
+    # Field Selection
     st.markdown("**Select Fields to Extract:**")
-    st.markdown("<div style='margin-bottom: 1rem;'></div>", unsafe_allow_html=True)
     
-    # Row 1
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        inv_num = st.checkbox('📋 Invoice Number', value=True, key='inv_num')
-    with col2:
-        customer = st.checkbox('👤 Customer Name', value=True, key='customer')
-    with col3:
-        tax = st.checkbox('📊 Tax Amount', value=False, key='tax')
+    col_a, col_b, col_c = st.columns(3)
+    with col_a:
+        inv_num = st.checkbox('📋 Invoice Number', value=True, key='f1')
+        date = st.checkbox('📅 Date', value=True, key='f2')
+    with col_b:
+        customer = st.checkbox('👤 Customer Name', value=True, key='f3')
+        total = st.checkbox('💰 Total Amount', value=True, key='f4')
+    with col_c:
+        company = st.checkbox('🏢 Company Name', value=True, key='f5')
+        tax = st.checkbox('📊 Tax Amount', value=False, key='f6')
     
-    # Row 2
-    col4, col5, col6 = st.columns(3)
-    with col4:
-        date = st.checkbox('📅 Date', value=True, key='date')
-    with col5:
-        total = st.checkbox('💰 Total Amount', value=True, key='total')
-    with col6:
-        subtotal = st.checkbox('💵 Subtotal', value=False, key='subtotal')
-    
-    # Row 3
-    col7, col8, col9 = st.columns(3)
-    with col7:
-        company = st.checkbox('🏢 Company Name', value=True, key='company')
+    subtotal = st.checkbox('💵 Subtotal', value=False, key='f7')
     
     field_options = {
         'Invoice Number': inv_num,
@@ -380,151 +400,114 @@ with col1:
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Upload options
-    tab1, tab2 = st.tabs(["📁 Process Folder", "📄 Process Single Invoice"])
+    # Tabs
+    tab1, tab2 = st.tabs(["📁 Process Folder", "📄 Single Invoice"])
     
     with tab1:
-        st.markdown("**Upload multiple invoice images:**")
         folder_files = st.file_uploader(
-            "Choose invoice images",
+            "Upload multiple invoices",
             type=['jpg', 'jpeg', 'png', 'tiff', 'bmp'],
             accept_multiple_files=True,
-            key="folder_upload",
-            label_visibility="collapsed"
+            key="folder"
         )
         
         if folder_files:
-            st.success(f"✅ {len(folder_files)} file(s) ready to process")
+            st.success(f"✅ {len(folder_files)} files ready")
             
-            if st.button("🚀 Process All Invoices", type="primary", use_container_width=True):
+            if st.button("🚀 Process All", type="primary", use_container_width=True):
                 if not selected_fields:
-                    st.error("⚠️ Please select at least one field to extract")
+                    st.error("Please select fields")
                 else:
-                    log_activity(f"📁 Processing folder with {len(folder_files)} files")
+                    log_activity(f"📁 Processing {len(folder_files)} files")
                     
-                    with st.spinner("🔮 Processing invoices..."):
-                        progress_bar = st.progress(0)
-                        results = []
-                        
-                        for i, file in enumerate(folder_files):
-                            progress = (i + 1) / len(folder_files)
-                            progress_bar.progress(progress)
-                            
-                            data = process_invoice(file, selected_fields)
-                            if data:
-                                results.append(data)
-                        
-                        progress_bar.empty()
-                        
-                        if results:
-                            st.session_state.extracted_data = results
-                            st.balloons()
-                            log_activity(f"✅ Successfully processed {len(results)} invoices!")
-                            st.markdown(f"""
-                                <div class="success-banner">
-                                    🎉 Success! Extracted data from {len(results)} invoices
-                                </div>
-                            """, unsafe_allow_html=True)
-                        else:
-                            st.error("❌ Could not extract data from any images")
+                    progress = st.progress(0)
+                    results = []
+                    
+                    for i, file in enumerate(folder_files):
+                        progress.progress((i + 1) / len(folder_files))
+                        data = process_invoice(file, selected_fields)
+                        if data:
+                            results.append(data)
+                    
+                    progress.empty()
+                    
+                    if results:
+                        st.session_state.extracted_data = results
+                        st.balloons()
+                        log_activity(f"✅ Processed {len(results)} invoices")
+                        st.success(f"✅ Extracted {len(results)} invoices!")
     
     with tab2:
-        st.markdown("**Upload a single invoice image:**")
         single_file = st.file_uploader(
-            "Choose one invoice",
+            "Upload one invoice",
             type=['jpg', 'jpeg', 'png', 'tiff', 'bmp'],
-            key="single_upload",
-            label_visibility="collapsed"
+            key="single"
         )
         
         if single_file:
-            col_img, col_btn = st.columns([1, 1])
+            image = Image.open(single_file)
+            st.image(image, caption=single_file.name, use_column_width=True)
             
-            with col_img:
-                image = Image.open(single_file)
-                st.image(image, caption=single_file.name, use_column_width=True)
-            
-            with col_btn:
-                if st.button("🚀 Extract Data", type="primary", use_container_width=True):
-                    if not selected_fields:
-                        st.error("⚠️ Please select at least one field")
-                    else:
-                        log_activity(f"📄 Processing single invoice: {single_file.name}")
-                        
-                        with st.spinner("🔮 Extracting data..."):
-                            data = process_invoice(single_file, selected_fields)
-                            
-                            if data:
-                                st.session_state.extracted_data = [data]
-                                st.balloons()
-                                log_activity("✅ Data extracted successfully!")
-                                st.success("✅ Data extracted and saved!")
-                            else:
-                                st.error("❌ Could not extract data")
+            if st.button("🚀 Extract Data", type="primary", use_container_width=True):
+                if not selected_fields:
+                    st.error("Please select fields")
+                else:
+                    log_activity(f"📄 Processing: {single_file.name}")
+                    data = process_invoice(single_file, selected_fields)
+                    
+                    if data:
+                        st.session_state.extracted_data = [data]
+                        st.balloons()
+                        st.success("✅ Data extracted!")
     
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    # Excel Output Section
-    st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-    st.markdown("<h3 class='section-title'>💾 Excel Output File</h3>", unsafe_allow_html=True)
+    # Excel Output
+    st.markdown('<div class="clean-card">', unsafe_allow_html=True)
+    st.markdown('<p class="card-title">💾 Excel Output</p>', unsafe_allow_html=True)
     
-    excel_path = st.text_input(
-        "Excel file path:",
-        value=st.session_state.excel_path,
-        help="Path where Excel file will be saved"
-    )
+    excel_path = st.text_input("File path:", value=st.session_state.excel_path)
     st.session_state.excel_path = excel_path
     
-    col_btn1, col_btn2 = st.columns(2)
+    col_x, col_y = st.columns(2)
+    with col_x:
+        st.button("📂 Browse", use_container_width=True)
+    with col_y:
+        st.button("📊 Open Excel", use_container_width=True)
     
-    with col_btn1:
-        if st.button("📂 Browse", use_container_width=True):
-            st.info("💡 In web version, files download to your Downloads folder. Enter desired filename above.")
-    
-    with col_btn2:
-        if st.button("📊 Open Excel", use_container_width=True):
-            st.info("💡 Use the Download buttons in the results section below to get your Excel file!")
-    
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with col2:
     # Activity Log
-    st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-    st.markdown("<h3 class='section-title'>📋 Activity Log</h3>", unsafe_allow_html=True)
+    st.markdown('<div class="clean-card">', unsafe_allow_html=True)
+    st.markdown('<p class="card-title">📋 Activity Log</p>', unsafe_allow_html=True)
     
     if st.session_state.activity_log:
-        log_text = "\n".join(st.session_state.activity_log[-20:])  # Last 20 entries
-        st.text_area(
-            "Activity",
-            value=log_text,
-            height=400,
-            label_visibility="collapsed"
-        )
+        log_text = "\n".join(st.session_state.activity_log[-15:])
+        st.markdown(f'<div class="activity-log">{log_text}</div>', unsafe_allow_html=True)
         
         if st.button("🗑️ Clear Log", use_container_width=True):
             st.session_state.activity_log = []
             st.rerun()
     else:
-        st.info("📝 Activity will appear here...")
+        st.info("Activity will appear here...")
     
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # Results Section
 if st.session_state.extracted_data:
-    st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
-    st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-    st.markdown("<h3 class='section-title'>📊 Extracted Data</h3>", unsafe_allow_html=True)
+    st.markdown('<div class="clean-card">', unsafe_allow_html=True)
+    st.markdown('<p class="card-title">📊 Extracted Data</p>', unsafe_allow_html=True)
     
     df = pd.DataFrame(st.session_state.extracted_data)
-    st.dataframe(df, use_container_width=True, height=400)
+    st.dataframe(df, use_container_width=True, height=350)
     
-    # Download buttons
     col1, col2, col3 = st.columns(3)
     
     with col1:
         excel_data = convert_df_to_excel_bytes(df)
         st.download_button(
-            label="📥 Download Excel",
+            "📥 Download Excel",
             data=excel_data,
             file_name=f"brillspark_invoices_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -534,7 +517,7 @@ if st.session_state.extracted_data:
     with col2:
         csv = df.to_csv(index=False)
         st.download_button(
-            label="📥 Download CSV",
+            "📥 Download CSV",
             data=csv,
             file_name=f"brillspark_invoices_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
             mime="text/csv",
@@ -544,16 +527,14 @@ if st.session_state.extracted_data:
     with col3:
         if st.button("🗑️ Clear Data", use_container_width=True):
             st.session_state.extracted_data = []
-            log_activity("🗑️ Cleared extracted data")
             st.rerun()
     
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # Footer
-st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
 st.markdown("""
-    <div style='text-align: center; padding: 2rem; color: rgba(255,255,255,0.7);'>
-        <p style='font-size: 0.9rem;'>✨ Invoice Extractor AI v2.0 | Brillspark</p>
-        <p style='font-size: 0.8rem;'>Powered by AI • Optimized for Indian Invoices • Built with ❤️</p>
+    <div style="text-align: center; padding: 2rem 0; color: #9ca3af; font-size: 0.85rem;">
+        <p style="margin: 0;">✨ Invoice Extractor AI v2.0 | Brillspark</p>
+        <p style="margin: 0;">Powered by AI • Optimized for Indian Invoices</p>
     </div>
 """, unsafe_allow_html=True)
