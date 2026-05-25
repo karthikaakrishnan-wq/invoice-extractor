@@ -328,7 +328,9 @@ def convert_df_to_excel_bytes(df):
 st.markdown("""
 <div class="hero-card">
 
-    <h1 class="hero-title">Invoice Data Extractor</h1>
+    <h1 class="hero-title">
+        Invoice Data Extractor
+    </h1>
 
     <p class="hero-subtitle">
         Fast. Accurate. Professional.
@@ -340,10 +342,23 @@ st.markdown("""
     </p>
 
     <div class="feature-tags">
-        <div class="feature-pill">📄 Invoice Processing</div>
-        <div class="feature-pill">📊 Excel Export</div>
-        <div class="feature-pill">⚡ Fast Extraction</div>
-        <div class="feature-pill">🔒 Secure Processing</div>
+
+        <div class="feature-pill">
+            📄 Invoice Processing
+        </div>
+
+        <div class="feature-pill">
+            📊 Excel Export
+        </div>
+
+        <div class="feature-pill">
+            ⚡ Fast Extraction
+        </div>
+
+        <div class="feature-pill">
+            🔒 Secure Processing
+        </div>
+
     </div>
 
 </div>
