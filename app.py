@@ -226,32 +226,34 @@ def log_activity(message):
     st.session_state.activity_log.append(f"{timestamp} {message}")
 
 def extract_field(text, field_name):
-    """Extract specific field from text"""
+    """Extract specific field from text - Improved for Indian invoices"""
     text_lower = text.lower()
+    text_original = text
     lines = [line.strip() for line in text.split('\n') if line.strip()]
     
     if field_name == 'Invoice Number':
+        # Search in original text (case-sensitive) for better matching
         patterns = [
-            r'quotation\s+no\.?\s*:?\s*([a-z0-9#\-/]+)',
-            r'invoice\s+no\.?\s*:?\s*([a-z0-9#\-/]+)',
-            r'bill\s+no\.?\s*:?\s*([a-z0-9#\-/]+)',
-            r'inv\s*#?\s*:?\s*([a-z0-9#\-/]+)',
-            r'#\s*([a-z]{2,}\d+)',
-            r'([a-z]{3,}\s*#\s*[a-z]?\d+)',
+            (r'Quotation\s+No\.?\s*:?\s*([A-Z\d#\-/]+)', 1),
+            (r'quotation\s+no\.?\s*:?\s*([A-Z\d#\-/]+)', 1),
+            (r'Invoice\s+No\.?\s*:?\s*([A-Z\d#\-/]+)', 1),
+            (r'invoice\s+no\.?\s*:?\s*([A-Z\d#\-/]+)', 1),
+            (r'\b([A-Z]{3,}\s*#\s*[A-Z]?\d{3,})\b', 1),  # INBR#Q108
         ]
-        for pattern in patterns:
-            match = re.search(pattern, text_lower)
+        
+        for pattern, group in patterns:
+            match = re.search(pattern, text_original)
             if match:
-                value = match.group(1)
-                if value and len(value) > 2:
-                    return value.upper()
+                invoice_num = match.group(group).strip()
+                invoice_num = re.sub(r'\s+', '', invoice_num)
+                if len(invoice_num) >= 4:
+                    return invoice_num.upper()
     
     elif field_name == 'Date':
         patterns = [
             r'quotation\s+date\s*:?\s*(\d{1,2}\s+[a-z]+,?\s+\d{4})',
             r'invoice\s+date\s*:?\s*(\d{1,2}\s+[a-z]+,?\s+\d{4})',
-            r'(\d{1,2}\s+[a-z]+,?\s+\d{4})',
-            r'(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})',
+            r'(\d{1,2}\s+[a-z]{3,},?\s+\d{4})',
         ]
         for pattern in patterns:
             match = re.search(pattern, text_lower)
@@ -262,56 +264,73 @@ def extract_field(text, field_name):
         for i, line in enumerate(lines[:10]):
             line_clean = line.strip()
             if len(line_clean) > 3 and line_clean.lower() not in ['quote', 'invoice', 'bill', 'quotation']:
-                if ':' not in line_clean and 'no' not in line_clean.lower()[:5]:
+                if not re.search(r'(invoice|quotation|bill|to:|date|no\.)', line_clean.lower()):
                     return line_clean
     
     elif field_name == 'Customer Name':
         for i, line in enumerate(lines):
-            if 'invoice to' in line.lower() or (line.lower().startswith('to') and ':' in line):
+            if 'invoice to' in line.lower() or 'bill to' in line.lower():
                 if i + 1 < len(lines):
-                    customer = lines[i + 1]
-                    if customer and len(customer) > 2:
-                        return customer
+                    return lines[i + 1]
+            if line.lower().strip().startswith('to:'):
+                rest = line[3:].strip()
+                if rest:
+                    return rest
+                elif i + 1 < len(lines):
+                    return lines[i + 1]
     
     elif field_name == 'Total Amount':
-        patterns = [
-            r'total\s*(?:amount)?\s*:?\s*(?:rs\.?|₹|inr)?\s*(\d[\d,]+\.?\d*)',
-            r'grand\s+total\s*:?\s*(?:rs\.?|₹|inr)?\s*(\d[\d,]+\.?\d*)',
-            r'net\s+total\s*:?\s*(?:rs\.?|₹|inr)?\s*(\d[\d,]+\.?\d*)',
-            r'amount\s+payable\s*:?\s*(?:rs\.?|₹|inr)?\s*(\d[\d,]+\.?\d*)',
-        ]
-        for pattern in patterns:
-            match = re.search(pattern, text_lower)
-            if match:
-                amount = match.group(1).replace(',', '')
-                if float(amount) > 100:  # Filter out small numbers
-                    return f"₹ {amount}"
+        # Find all amounts and return the largest one
+        amounts = []
+        
+        # Look for amounts with currency symbols or keywords
+        all_amounts = re.findall(r'(?:rs\.?|₹|inr)?\s*([\d,]+\.?\d*)', text_lower)
+        
+        for amount_str in all_amounts:
+            try:
+                clean_amount = amount_str.replace(',', '').strip()
+                if clean_amount:
+                    amount_val = float(clean_amount)
+                    # Only consider amounts in reasonable range
+                    if 500 < amount_val < 10000000:
+                        amounts.append(amount_val)
+            except:
+                continue
+        
+        # Return the largest amount (most likely the total)
+        if amounts:
+            max_amount = max(amounts)
+            return f"₹ {max_amount:,.0f}"
     
     elif field_name == 'Tax Amount':
         patterns = [
-            r'gst\s*\(\d+%\)\s*(?:₹|rs\.?|2)?\s*(\d+[,\d]+)',
-            r'tax\s*:?\s*(?:₹|rs\.?|2)?\s*(\d+[,\d]+)',
+            r'gst\s*\(?[\d%]+\)?\s*:?\s*(?:rs\.?|₹)?\s*([\d,]+\.?\d*)',
+            r'tax\s*:?\s*(?:rs\.?|₹)?\s*([\d,]+\.?\d*)',
         ]
         for pattern in patterns:
             match = re.search(pattern, text_lower)
             if match:
-                amount = match.group(1)
-                amount = re.sub(r'^[₹2]\s*', '', amount)
-                if len(amount) >= 2 and amount[0].isdigit():
-                    return '₹ ' + amount
+                try:
+                    amount = float(match.group(1).replace(',', ''))
+                    if amount > 0:
+                        return f"₹ {amount:,.0f}"
+                except:
+                    continue
     
     elif field_name == 'Subtotal':
         patterns = [
-            r'sub\s*total\s*:?\s*(?:₹|rs\.?|2)?\s*(\d+[,\d]+)',
-            r'subtotal\s*:?\s*(?:₹|rs\.?|2)?\s*(\d+[,\d]+)',
+            r'sub\s*total\s*:?\s*(?:rs\.?|₹)?\s*([\d,]+\.?\d*)',
+            r'subtotal\s*:?\s*(?:rs\.?|₹)?\s*([\d,]+\.?\d*)',
         ]
         for pattern in patterns:
             match = re.search(pattern, text_lower)
             if match:
-                amount = match.group(1)
-                amount = re.sub(r'^[₹2]\s*', '', amount)
-                if len(amount) >= 2 and amount[0].isdigit():
-                    return '₹ ' + amount
+                try:
+                    amount = float(match.group(1).replace(',', ''))
+                    if amount > 0:
+                        return f"₹ {amount:,.0f}"
+                except:
+                    continue
     
     return 'N/A'
 
@@ -465,20 +484,18 @@ with col1:
     
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Excel Output
+    # Excel Output - Simplified for Web
     st.markdown('<div class="clean-card">', unsafe_allow_html=True)
-    st.markdown('<p class="card-title">💾 Excel Output</p>', unsafe_allow_html=True)
+    st.markdown('<p class="card-title">💾 Excel Output Filename</p>', unsafe_allow_html=True)
     
-    excel_path = st.text_input("File path:", value=st.session_state.excel_path)
+    excel_path = st.text_input(
+        "Output filename:", 
+        value=st.session_state.excel_path,
+        help="This filename will be used when downloading your Excel file"
+    )
     st.session_state.excel_path = excel_path
     
-    col_x, col_y = st.columns(2)
-    with col_x:
-        if st.button("📂 Browse", use_container_width=True):
-            st.info("💡 Web version: Files download to your Downloads folder automatically. Edit the filename above if needed.")
-    with col_y:
-        if st.button("📊 Open Excel", use_container_width=True):
-            st.info("💡 Web version: Click 'Download Excel' in the results section below to get your file!")
+    st.caption("💡 Files will download to your browser's Downloads folder when you click the Download buttons below.")
     
     st.markdown('</div>', unsafe_allow_html=True)
 
