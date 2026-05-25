@@ -280,27 +280,71 @@ def extract_field(text, field_name):
                     return lines[i + 1]
     
     elif field_name == 'Total Amount':
-        # Find all amounts and return the largest one
+        # Find all amounts, being careful about rupee symbol being read as "2"
         amounts = []
         
-        # Look for amounts with currency symbols or keywords
-        all_amounts = re.findall(r'(?:rs\.?|₹|inr)?\s*([\d,]+\.?\d*)', text_lower)
+        # Pattern 1: Look for "Total" keyword followed by amount
+        total_patterns = [
+            r'total\s*:?\s*(?:rs\.?|₹|2)?\s*([\d,]+)',
+            r'grand\s+total\s*:?\s*(?:rs\.?|₹|2)?\s*([\d,]+)',
+            r'net\s+total\s*:?\s*(?:rs\.?|₹|2)?\s*([\d,]+)',
+        ]
+        
+        for pattern in total_patterns:
+            match = re.search(pattern, text_lower)
+            if match:
+                amount_str = match.group(1).replace(',', '').strip()
+                # Remove leading "2" if it's likely from rupee symbol
+                if amount_str.startswith('2') and len(amount_str) > 4:
+                    # Try without the leading 2
+                    without_2 = amount_str[1:]
+                    try:
+                        amount_val = float(without_2)
+                        if 500 < amount_val < 10000000:
+                            return f"₹ {amount_val:,.0f}"
+                    except:
+                        pass
+                
+                # Also try with the 2
+                try:
+                    amount_val = float(amount_str)
+                    if 500 < amount_val < 10000000:
+                        amounts.append(amount_val)
+                except:
+                    continue
+        
+        # Pattern 2: Find all standalone amounts
+        all_amounts = re.findall(r'(?:^|[^\d])(\d[\d,]+)(?:[^\d]|$)', text_lower)
         
         for amount_str in all_amounts:
             try:
                 clean_amount = amount_str.replace(',', '').strip()
                 if clean_amount:
+                    # Skip if it starts with 2 and looks like it has rupee symbol issue
+                    if clean_amount.startswith('2') and len(clean_amount) >= 5:
+                        # Check the version without leading 2
+                        without_2 = clean_amount[1:]
+                        amount_without = float(without_2)
+                        if 500 < amount_without < 10000000:
+                            amounts.append(amount_without)
+                            continue
+                    
                     amount_val = float(clean_amount)
-                    # Only consider amounts in reasonable range
                     if 500 < amount_val < 10000000:
                         amounts.append(amount_val)
             except:
                 continue
         
-        # Return the largest amount (most likely the total)
+        # Return the most reasonable amount
         if amounts:
-            max_amount = max(amounts)
-            return f"₹ {max_amount:,.0f}"
+            # Filter out suspiciously large amounts (likely with the "2" prefix)
+            reasonable_amounts = [a for a in amounts if a < 1000000]
+            if reasonable_amounts:
+                max_amount = max(reasonable_amounts)
+                return f"₹ {max_amount:,.0f}"
+            else:
+                max_amount = max(amounts)
+                return f"₹ {max_amount:,.0f}"
     
     elif field_name == 'Tax Amount':
         patterns = [
